@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: phoenix_alliance_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-phoenix_alliance}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-phoenix_alliance}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - phoenix_alliance_network
+
+  # Servicio de migraciones
+  migrate:
+    image: migrate/migrate
+    container_name: phoenix_alliance_migrate
+    # Espera a que PostgreSQL esté saludable antes de ejecutar
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # Monta el directorio de migraciones local en el contenedor
+      - ./migrations:/migrations
+    command: [ 
+      "-path", "/migrations", 
+      "-database", 
+      "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-phoenix_alliance}?sslmode=disable", 
+      "up" 
+    ]
+    networks:
+      - phoenix_alliance_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  phoenix_alliance_network:
+    driver: bridge
+
