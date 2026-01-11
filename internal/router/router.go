@@ -40,6 +40,8 @@ func SetupRouter(
 	// Exercise routes
 	api.HandleFunc("/exercises", exerciseHandler.CreateExercise).Methods("POST", "OPTIONS")
 	api.HandleFunc("/exercises", exerciseHandler.GetExercises).Methods("GET", "OPTIONS")
+	api.HandleFunc("/exercises/{id}", exerciseHandler.UpdateExercise).Methods("PUT", "OPTIONS")
+	api.HandleFunc("/exercises/{id}", exerciseHandler.DeleteExercise).Methods("DELETE", "OPTIONS")
 	api.HandleFunc("/exercises/{id}/history", exerciseHandler.GetExerciseHistory).Methods("GET", "OPTIONS")
 	api.HandleFunc("/exercises/{id}/progress", exerciseHandler.GetExerciseProgress).Methods("GET", "OPTIONS")
 

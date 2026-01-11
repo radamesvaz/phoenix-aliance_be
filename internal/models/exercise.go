@@ -6,14 +6,20 @@ import (
 
 // Exercise represents an exercise created by a user
 type Exercise struct {
-	ID        int64     `json:"id" db:"id_exercise"`
-	UserID    int64     `json:"user_id" db:"user_id"`
-	Name      string    `json:"name" db:"name"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	ID        int64      `json:"id" db:"id_exercise"`
+	UserID    int64      `json:"user_id" db:"user_id"`
+	Name      string     `json:"name" db:"name"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 }
 
 // ExerciseCreateRequest represents the request body for creating an exercise
 type ExerciseCreateRequest struct {
+	Name string `json:"name" validate:"required,min=1"`
+}
+
+// ExerciseUpdateRequest represents the request body for updating an exercise
+type ExerciseUpdateRequest struct {
 	Name string `json:"name" validate:"required,min=1"`
 }
 

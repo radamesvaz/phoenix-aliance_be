@@ -93,13 +93,12 @@ func main() {
 	}
 
 	// Create a workout
-	workoutDate := time.Now().AddDate(0, 0, -1) // Yesterday
 	var workoutID int64
 	err = database.DB.QueryRow(`
-		INSERT INTO workouts (user_id, date, created_at)
+		INSERT INTO workouts (user_id, name, created_at)
 		VALUES ($1, $2, $3)
 		RETURNING id_workout
-	`, userID, workoutDate, time.Now()).Scan(&workoutID)
+	`, userID, "Push Day", time.Now()).Scan(&workoutID)
 	if err != nil {
 		log.Printf("Error creating workout: %v", err)
 	} else {

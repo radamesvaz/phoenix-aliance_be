@@ -215,9 +215,8 @@ func (r *setRepository) GetByExerciseIDAndDateRange(exerciseID int64, startDate,
 	query := `
 		SELECT s.id_set, s.workout_id, s.exercise_id, s.weight, s.reps, s.rest_seconds, s.notes, s.rpe, s.created_at 
 		FROM sets s
-		INNER JOIN workouts w ON s.workout_id = w.id_workout
-		WHERE s.exercise_id = $1 AND w.date >= $2 AND w.date <= $3
-		ORDER BY w.date ASC, s.created_at ASC
+		WHERE s.exercise_id = $1 AND s.created_at >= $2 AND s.created_at <= $3
+		ORDER BY s.created_at ASC
 	`
 
 	rows, err := r.db.Query(query, exerciseID, startDate, endDate)

@@ -41,13 +41,13 @@ clean:
 	rm -rf bin/
 	rm -f coverage.out coverage.html
 
-# Run migrations up (requires golang-migrate)
+# Run migrations up (uses cmd/migrate/main.go)
 migrate-up:
-	migrate -path migrations -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)" up
+	go run cmd/migrate/main.go up
 
-# Run migrations down (requires golang-migrate)
+# Run migrations down (uses cmd/migrate/main.go)
 migrate-down:
-	migrate -path migrations -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)" down
+	go run cmd/migrate/main.go down
 
 # Seed the database
 seed:
@@ -63,4 +63,3 @@ setup: docker-up
 	@echo "Waiting for database to be ready..."
 	@sleep 3
 	@echo "Setup complete! Run 'make run' to start the server."
-

@@ -28,7 +28,7 @@ func NewWorkoutService(workoutRepo repository.WorkoutRepository) WorkoutService 
 func (s *workoutService) CreateWorkout(userID int64, req *models.WorkoutCreateRequest) (*models.WorkoutResponse, error) {
 	workout := &models.Workout{
 		UserID:    userID,
-		Date:      req.Date,
+		Name:      req.Name,
 		CreatedAt: time.Now(),
 	}
 
@@ -63,4 +63,3 @@ func (s *workoutService) GetWorkouts(userID int64) ([]*models.WorkoutResponse, e
 
 	return responses, nil
 }
-

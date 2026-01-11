@@ -142,3 +142,70 @@ func (h *ExerciseHandler) GetExerciseProgress(w http.ResponseWriter, r *http.Req
 
 	respondWithJSON(w, http.StatusOK, progress)
 }
+
+// UpdateExercise handles PUT /exercises/{id}
+func (h *ExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	vars := mux.Vars(r)
+	exerciseID, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid exercise ID")
+		return
+	}
+
+	var req models.ExerciseUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.Name == "" {
+		respondWithError(w, http.StatusBadRequest, "Exercise name is required")
+		return
+	}
+
+	exercise, err := h.exerciseService.UpdateExercise(userID, exerciseID, &req)
+	if err != nil {
+		if err.Error() == "exercise not found" {
+			respondWithError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, exercise)
+}
+
+// DeleteExercise handles DELETE /exercises/{id}
+func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	vars := mux.Vars(r)
+	exerciseID, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid exercise ID")
+		return
+	}
+
+	err = h.exerciseService.DeleteExercise(userID, exerciseID)
+	if err != nil {
+		if err.Error() == "exercise not found" {
+			respondWithError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

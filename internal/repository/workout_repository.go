@@ -27,20 +27,20 @@ func NewWorkoutRepository(db *sql.DB) WorkoutRepository {
 // Create creates a new workout
 func (r *workoutRepository) Create(workout *models.Workout) error {
 	query := `
-		INSERT INTO workouts (user_id, date, created_at)
+		INSERT INTO workouts (user_id, name, created_at)
 		VALUES ($1, $2, $3)
-		RETURNING id_workout, user_id, date, created_at
+		RETURNING id_workout, user_id, name, created_at
 	`
 
 	err := r.db.QueryRow(
 		query,
 		workout.UserID,
-		workout.Date,
+		workout.Name,
 		workout.CreatedAt,
 	).Scan(
 		&workout.ID,
 		&workout.UserID,
-		&workout.Date,
+		&workout.Name,
 		&workout.CreatedAt,
 	)
 
@@ -54,12 +54,12 @@ func (r *workoutRepository) Create(workout *models.Workout) error {
 // GetByID retrieves a workout by ID
 func (r *workoutRepository) GetByID(id int64) (*models.Workout, error) {
 	workout := &models.Workout{}
-	query := `SELECT id_workout, user_id, date, created_at FROM workouts WHERE id_workout = $1`
+	query := `SELECT id_workout, user_id, name, created_at FROM workouts WHERE id_workout = $1`
 
 	err := r.db.QueryRow(query, id).Scan(
 		&workout.ID,
 		&workout.UserID,
-		&workout.Date,
+		&workout.Name,
 		&workout.CreatedAt,
 	)
 
@@ -76,12 +76,12 @@ func (r *workoutRepository) GetByID(id int64) (*models.Workout, error) {
 // GetByIDAndUserID retrieves a workout by ID and ensures it belongs to the user
 func (r *workoutRepository) GetByIDAndUserID(id, userID int64) (*models.Workout, error) {
 	workout := &models.Workout{}
-	query := `SELECT id_workout, user_id, date, created_at FROM workouts WHERE id_workout = $1 AND user_id = $2`
+	query := `SELECT id_workout, user_id, name, created_at FROM workouts WHERE id_workout = $1 AND user_id = $2`
 
 	err := r.db.QueryRow(query, id, userID).Scan(
 		&workout.ID,
 		&workout.UserID,
-		&workout.Date,
+		&workout.Name,
 		&workout.CreatedAt,
 	)
 
@@ -98,10 +98,10 @@ func (r *workoutRepository) GetByIDAndUserID(id, userID int64) (*models.Workout,
 // GetByUserID retrieves all workouts for a user
 func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error) {
 	query := `
-		SELECT id_workout, user_id, date, created_at 
+		SELECT id_workout, user_id, name, created_at 
 		FROM workouts 
 		WHERE user_id = $1 
-		ORDER BY date DESC
+		ORDER BY created_at DESC
 	`
 
 	rows, err := r.db.Query(query, userID)
@@ -116,7 +116,7 @@ func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error)
 		err := rows.Scan(
 			&workout.ID,
 			&workout.UserID,
-			&workout.Date,
+			&workout.Name,
 			&workout.CreatedAt,
 		)
 		if err != nil {
