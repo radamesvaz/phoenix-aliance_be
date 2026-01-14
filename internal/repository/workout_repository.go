@@ -13,6 +13,7 @@ type WorkoutRepository interface {
 	GetByID(id int64) (*models.Workout, error)
 	GetByIDAndUserID(id, userID int64) (*models.Workout, error)
 	GetByUserID(userID int64) ([]*models.Workout, error)
+	Delete(id, userID int64) error
 }
 
 type workoutRepository struct {
@@ -29,7 +30,7 @@ func (r *workoutRepository) Create(workout *models.Workout) error {
 	query := `
 		INSERT INTO workouts (user_id, name, created_at)
 		VALUES ($1, $2, $3)
-		RETURNING id_workout, user_id, name, created_at
+		RETURNING id_workout, user_id, name, created_at, deleted_at
 	`
 
 	err := r.db.QueryRow(
@@ -42,6 +43,7 @@ func (r *workoutRepository) Create(workout *models.Workout) error {
 		&workout.UserID,
 		&workout.Name,
 		&workout.CreatedAt,
+		&workout.DeletedAt,
 	)
 
 	if err != nil {
@@ -54,13 +56,14 @@ func (r *workoutRepository) Create(workout *models.Workout) error {
 // GetByID retrieves a workout by ID
 func (r *workoutRepository) GetByID(id int64) (*models.Workout, error) {
 	workout := &models.Workout{}
-	query := `SELECT id_workout, user_id, name, created_at FROM workouts WHERE id_workout = $1`
+	query := `SELECT id_workout, user_id, name, created_at, deleted_at FROM workouts WHERE id_workout = $1 AND deleted_at IS NULL`
 
 	err := r.db.QueryRow(query, id).Scan(
 		&workout.ID,
 		&workout.UserID,
 		&workout.Name,
 		&workout.CreatedAt,
+		&workout.DeletedAt,
 	)
 
 	if err != nil {
@@ -76,13 +79,14 @@ func (r *workoutRepository) GetByID(id int64) (*models.Workout, error) {
 // GetByIDAndUserID retrieves a workout by ID and ensures it belongs to the user
 func (r *workoutRepository) GetByIDAndUserID(id, userID int64) (*models.Workout, error) {
 	workout := &models.Workout{}
-	query := `SELECT id_workout, user_id, name, created_at FROM workouts WHERE id_workout = $1 AND user_id = $2`
+	query := `SELECT id_workout, user_id, name, created_at, deleted_at FROM workouts WHERE id_workout = $1 AND user_id = $2 AND deleted_at IS NULL`
 
 	err := r.db.QueryRow(query, id, userID).Scan(
 		&workout.ID,
 		&workout.UserID,
 		&workout.Name,
 		&workout.CreatedAt,
+		&workout.DeletedAt,
 	)
 
 	if err != nil {
@@ -98,9 +102,9 @@ func (r *workoutRepository) GetByIDAndUserID(id, userID int64) (*models.Workout,
 // GetByUserID retrieves all workouts for a user
 func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error) {
 	query := `
-		SELECT id_workout, user_id, name, created_at 
-		FROM workouts 
-		WHERE user_id = $1 
+		SELECT id_workout, user_id, name, created_at, deleted_at
+		FROM workouts
+		WHERE user_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 	`
 
@@ -118,6 +122,7 @@ func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error)
 			&workout.UserID,
 			&workout.Name,
 			&workout.CreatedAt,
+			&workout.DeletedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -126,4 +131,29 @@ func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error)
 	}
 
 	return workouts, rows.Err()
+}
+
+// Delete performs a soft delete on a workout for a user
+func (r *workoutRepository) Delete(id, userID int64) error {
+	query := `
+		UPDATE workouts
+		SET deleted_at = CURRENT_TIMESTAMP
+		WHERE id_workout = $1 AND user_id = $2 AND deleted_at IS NULL
+	`
+
+	result, err := r.db.Exec(query, id, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("workout not found")
+	}
+
+	return nil
 }

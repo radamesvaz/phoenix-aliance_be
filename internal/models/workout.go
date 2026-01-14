@@ -10,6 +10,7 @@ type Workout struct {
 	UserID    int64     `json:"user_id" db:"user_id"`
 	Name      string    `json:"name" db:"name"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 }
 
 // WorkoutCreateRequest represents the request body for creating a workout

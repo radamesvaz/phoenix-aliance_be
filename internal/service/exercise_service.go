@@ -100,6 +100,5 @@ func (s *exerciseService) DeleteExercise(userID, exerciseID int64) error {
 		}
 		return errors.New("failed to delete exercise")
 	}
-
 	return nil
 }

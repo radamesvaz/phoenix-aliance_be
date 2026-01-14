@@ -177,3 +177,30 @@ func (h *WorkoutHandler) GetWorkoutSets(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, sets)
 }
 
+// DeleteWorkout handles DELETE /workouts/{id}
+func (h *WorkoutHandler) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	vars := mux.Vars(r)
+	workoutID, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid workout ID")
+		return
+	}
+
+	if err := h.workoutService.DeleteWorkout(userID, workoutID); err != nil {
+		if err.Error() == "workout not found" {
+			respondWithError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+

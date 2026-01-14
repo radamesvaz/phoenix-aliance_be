@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 {start|stop|restart|logs|status|psql|migrate|seed}"
+    echo "Usage: $0 {start|stop|restart|logs|status|psql|migrate|seed|test}"
     echo ""
     echo "Commands:"
     echo "  start   - Start database and server"
@@ -29,6 +29,7 @@ show_usage() {
     echo "    migrate version - Show current migration version"
     echo "    migrate force <version> - Force migration version"
     echo "  seed    - Seed database with sample data"
+    echo "  test    - Run all tests in the project"
     echo ""
     exit 1
 }
@@ -327,6 +328,21 @@ seed() {
     echo -e "${GREEN}✓ Database seeded${NC}"
 }
 
+# Function to run tests
+test() {
+    echo "Running all tests..."
+    echo ""
+    go test ./... -v
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}✓ All tests passed${NC}"
+    else
+        echo ""
+        echo -e "${RED}❌ Some tests failed${NC}"
+        exit 1
+    fi
+}
+
 # Main command handler
 case "${1:-}" in
     start)
@@ -370,6 +386,9 @@ case "${1:-}" in
         ;;
     seed)
         seed
+        ;;
+    test)
+        test
         ;;
     *)
         show_usage
