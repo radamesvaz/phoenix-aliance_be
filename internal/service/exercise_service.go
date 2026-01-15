@@ -91,9 +91,7 @@ func (s *exerciseService) DeleteExercise(userID, exerciseID int64) error {
 	_, err := s.exerciseRepo.GetByIDAndUserID(exerciseID, userID)
 	if err != nil {
 		return errors.New("exercise not found")
-	}
-
-	// Perform soft delete
+	}	// Perform soft delete
 	if err := s.exerciseRepo.Delete(exerciseID, userID); err != nil {
 		if err.Error() == "exercise not found" {
 			return errors.New("exercise not found")

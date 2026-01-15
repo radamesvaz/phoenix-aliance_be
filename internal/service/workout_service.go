@@ -68,9 +68,7 @@ func (s *workoutService) DeleteWorkout(userID, workoutID int64) error {
     // Verify workout exists and belongs to user
     if _, err := s.workoutRepo.GetByIDAndUserID(workoutID, userID); err != nil {
         return errors.New("workout not found")
-    }
-
-    // Soft delete
+    }    // Soft delete
     if err := s.workoutRepo.Delete(workoutID, userID); err != nil {
         if err.Error() == "workout not found" {
             return errors.New("workout not found")
