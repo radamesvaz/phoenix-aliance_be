@@ -20,11 +20,11 @@ type Set struct {
 // SetCreateRequest represents the request body for creating a set
 type SetCreateRequest struct {
 	ExerciseID  int64   `json:"exercise_id" validate:"required"`
-	Weight       float64 `json:"weight" validate:"required,min=0"`
-	Reps         int     `json:"reps" validate:"required,min=1"`
-	RestSeconds  *int    `json:"rest_seconds,omitempty" validate:"omitempty,min=0"`
-	Notes        *string `json:"notes,omitempty"`
-	RPE          *int    `json:"rpe,omitempty" validate:"omitempty,min=1,max=10"`
+	Weight      float64 `json:"weight" validate:"required,min=0"`
+	Reps        int     `json:"reps" validate:"required,min=1"`
+	RestSeconds *int    `json:"rest_seconds,omitempty" validate:"omitempty,min=0"`
+	Notes       *string `json:"notes,omitempty"`
+	RPE         *int    `json:"rpe,omitempty" validate:"omitempty,min=1,max=10"`
 }
 
 // SetResponse represents the set data returned in responses
@@ -54,4 +54,3 @@ func (s *Set) ToResponse() *SetResponse {
 		CreatedAt:   s.CreatedAt,
 	}
 }
-
