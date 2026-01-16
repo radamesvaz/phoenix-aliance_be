@@ -13,6 +13,7 @@ type WorkoutRepository interface {
 	GetByID(id int64) (*models.Workout, error)
 	GetByIDAndUserID(id, userID int64) (*models.Workout, error)
 	GetByUserID(userID int64) ([]*models.Workout, error)
+	Update(workout *models.Workout) error
 	Delete(id, userID int64) error
 }
 
@@ -131,6 +132,38 @@ func (r *workoutRepository) GetByUserID(userID int64) ([]*models.Workout, error)
 	}
 
 	return workouts, rows.Err()
+}
+
+// Update updates an existing workout (only non-deleted)
+func (r *workoutRepository) Update(workout *models.Workout) error {
+	query := `
+		UPDATE workouts
+		SET name = $1
+		WHERE id_workout = $2 AND user_id = $3 AND deleted_at IS NULL
+		RETURNING id_workout, user_id, name, created_at, deleted_at
+	`
+
+	err := r.db.QueryRow(
+		query,
+		workout.Name,
+		workout.ID,
+		workout.UserID,
+	).Scan(
+		&workout.ID,
+		&workout.UserID,
+		&workout.Name,
+		&workout.CreatedAt,
+		&workout.DeletedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("workout not found")
+		}
+		return err
+	}
+
+	return nil
 }
 
 // Delete performs a soft delete on a workout for a user

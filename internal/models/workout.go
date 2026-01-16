@@ -18,6 +18,11 @@ type WorkoutCreateRequest struct {
 	Name string `json:"name" validate:"required,min=1"`
 }
 
+// WorkoutUpdateRequest represents the request body for updating a workout
+type WorkoutUpdateRequest struct {
+	Name string `json:"name" validate:"required,min=1"`
+}
+
 // WorkoutResponse represents the workout data returned in responses
 type WorkoutResponse struct {
 	ID        int64     `json:"id"`

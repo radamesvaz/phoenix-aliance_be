@@ -14,6 +14,7 @@ type mockWorkoutRepository struct {
 	getByIDFunc         func(id int64) (*models.Workout, error)
 	getByIDAndUserIDFunc func(id, userID int64) (*models.Workout, error)
 	getByUserIDFunc     func(userID int64) ([]*models.Workout, error)
+	updateFunc          func(workout *models.Workout) error
 	deleteFunc          func(id, userID int64) error
 }
 
@@ -43,6 +44,13 @@ func (m *mockWorkoutRepository) GetByUserID(userID int64) ([]*models.Workout, er
 		return m.getByUserIDFunc(userID)
 	}
 	return nil, nil
+}
+
+func (m *mockWorkoutRepository) Update(workout *models.Workout) error {
+	if m.updateFunc != nil {
+		return m.updateFunc(workout)
+	}
+	return nil
 }
 
 func (m *mockWorkoutRepository) Delete(id, userID int64) error {
@@ -215,6 +223,101 @@ func TestGetWorkouts(t *testing.T) {
 
 		if err == nil || err.Error() != "failed to retrieve workouts" {
 			t.Fatalf("expected failed to retrieve workouts, got %v", err)
+		}
+		if res != nil {
+			t.Fatalf("expected nil result, got %+v", res)
+		}
+	})
+}
+
+func TestUpdateWorkout(t *testing.T) {
+	userID := int64(1)
+	workoutID := int64(50)
+	originalName := "Push Day"
+	updatedName := "Upper Body"
+
+	t.Run("success", func(t *testing.T) {
+		mockRepo := &mockWorkoutRepository{
+			getByIDAndUserIDFunc: func(id, uid int64) (*models.Workout, error) {
+				if id != workoutID || uid != userID {
+					t.Fatalf("unexpected ids (%d,%d)", id, uid)
+				}
+				return &models.Workout{
+					ID:        workoutID,
+					UserID:    userID,
+					Name:      originalName,
+					CreatedAt: time.Now(),
+				}, nil
+			},
+			updateFunc: func(workout *models.Workout) error {
+				if workout.ID != workoutID {
+					t.Errorf("expected ID %d, got %d", workoutID, workout.ID)
+				}
+				if workout.UserID != userID {
+					t.Errorf("expected user %d, got %d", userID, workout.UserID)
+				}
+				if workout.Name != updatedName {
+					t.Errorf("expected name %s, got %s", updatedName, workout.Name)
+				}
+				return nil
+			},
+		}
+
+		svc := NewWorkoutService(mockRepo)
+		res, err := svc.UpdateWorkout(userID, workoutID, &models.WorkoutUpdateRequest{Name: updatedName})
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.ID != workoutID {
+			t.Errorf("expected ID %d, got %d", workoutID, res.ID)
+		}
+		if res.Name != updatedName {
+			t.Errorf("expected updated name %s, got %s", updatedName, res.Name)
+		}
+		if res.Name == originalName {
+			t.Errorf("expected name to change from %s", originalName)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mockRepo := &mockWorkoutRepository{
+			getByIDAndUserIDFunc: func(id, uid int64) (*models.Workout, error) {
+				return nil, errors.New("workout not found")
+			},
+		}
+
+		svc := NewWorkoutService(mockRepo)
+		res, err := svc.UpdateWorkout(userID, workoutID, &models.WorkoutUpdateRequest{Name: updatedName})
+
+		if err == nil || err.Error() != "workout not found" {
+			t.Fatalf("expected workout not found error, got %v", err)
+		}
+		if res != nil {
+			t.Fatalf("expected nil result, got %+v", res)
+		}
+	})
+
+	t.Run("update fails", func(t *testing.T) {
+		mockRepo := &mockWorkoutRepository{
+			getByIDAndUserIDFunc: func(id, uid int64) (*models.Workout, error) {
+				return &models.Workout{
+					ID:        workoutID,
+					UserID:    userID,
+					Name:      originalName,
+					CreatedAt: time.Now(),
+				}, nil
+			},
+			updateFunc: func(workout *models.Workout) error {
+				return errors.New("db down")
+			},
+		}
+
+		svc := NewWorkoutService(mockRepo)
+		res, err := svc.UpdateWorkout(userID, workoutID, &models.WorkoutUpdateRequest{Name: updatedName})
+
+		if err == nil || err.Error() != "failed to update workout" {
+			t.Fatalf("expected failed to update workout, got %v", err)
 		}
 		if res != nil {
 			t.Fatalf("expected nil result, got %+v", res)

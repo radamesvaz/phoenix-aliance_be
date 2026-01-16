@@ -49,6 +49,7 @@ func SetupRouter(
 	api.HandleFunc("/workouts", workoutHandler.CreateWorkout).Methods("POST", "OPTIONS")
 	api.HandleFunc("/workouts", workoutHandler.GetWorkouts).Methods("GET", "OPTIONS")
 	api.HandleFunc("/workouts/{id}", workoutHandler.GetWorkout).Methods("GET", "OPTIONS")
+	api.HandleFunc("/workouts/{id}", workoutHandler.UpdateWorkout).Methods("PUT", "OPTIONS")
 	api.HandleFunc("/workouts/{id}", workoutHandler.DeleteWorkout).Methods("DELETE", "OPTIONS")
 	api.HandleFunc("/workouts/{id}/sets", workoutHandler.CreateSet).Methods("POST", "OPTIONS")
 	api.HandleFunc("/workouts/{id}/sets", workoutHandler.GetWorkoutSets).Methods("GET", "OPTIONS")
